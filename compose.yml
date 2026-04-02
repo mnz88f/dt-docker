@@ -1,0 +1,86 @@
+services:
+    caddy:
+        image: caddy:2
+        container_name: caddy
+        ports:
+            - "80:80"
+            - "443:443"
+            - "9000:9000"
+            - "9001:9001"
+        volumes:
+            - ./caddy/conf:/etc/caddy
+            - caddy_data:/data
+            - caddy_config:/config
+    wordpress:
+        container_name: wordpress
+        image: wordpress:6.9.0
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            - 127.0.0.1:8080:80
+        environment:
+            WORDPRESS_DB_HOST: ${WORDPRESS_DB_HOST}
+            WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+            WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+            WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+            WORDPRESS_DEBUG: ${WORDPRESS_DEBUG}
+        command: >
+            sh -c "update-ca-certificates && docker-entrypoint.sh apache2-foreground"
+        volumes:
+            - wordpress:/var/www/html
+            - ./wordpress/certs:/usr/local/share/ca-certificates
+            # - ./wordpress/themes:/var/www/html/wp-content/themes
+    db:
+        container_name: mysql
+        image: mysql:8.0
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        ports:
+            - 127.0.0.1:3306:3306
+        volumes:
+            - ./mysql/mysql-init:/docker-entrypoint-initdb.d
+            - mysql-dbs:/var/lib/mysql
+            - ./mysql/my.cnf:/etc/my.cnf
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "mysqladmin",
+                    "ping",
+                    "-h",
+                    "localhost",
+                    "-u",
+                    "root",
+                    "-p$MYSQL_ROOT_PASSWORD",
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 30s
+    minio:
+        container_name: minio
+        image: quay.io/minio/minio
+        depends_on:
+            wordpress:
+                condition: service_started
+        tty: true
+        volumes:
+            - minio:/data
+            - ./minio/certs:/certs
+        environment:
+            - MINIO_CONFIG_ENV_FILE=/mnt/minio/config
+            - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+            - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+            - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+            - MINIO_REGION=${MINIO_REGION}
+            - MINIO_PUBLIC_DOMAIN=${MINIO_PUBLIC_DOMAIN}
+        command: minio server /data --console-address :9001
+
+networks: {}
+volumes:
+    wordpress:
+    mysql-dbs:
+    minio:
+    caddy_data:
+    caddy_config:

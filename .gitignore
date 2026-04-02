@@ -1,0 +1,8 @@
+.env
+*.deb
+*.crt
+*.key
+vol_backup
+mysql/*/*.sql
+mysql/*/*.sql.gz
+mysql/mysql-init-archive

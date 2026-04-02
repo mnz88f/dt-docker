@@ -1,0 +1,14 @@
+:443 {
+    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
+    reverse_proxy wordpress:80
+}
+
+:9000 {
+    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
+    reverse_proxy minio:9000
+}
+
+:9001 {
+    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
+    reverse_proxy minio:9001
+}
