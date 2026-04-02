@@ -21,7 +21,7 @@ WORDPRESS_DEBUG=false
 
 ## Setting up Caddy DT using a public domain
 
-If your DT host server is accessible using a public domain (ie `dt-domain.org`) then Caddy can create a certificate for you using Let's Encrypt.
+If your DT host server is accessible using a public domain (ie `dt-domain.org`) then Caddy will create a certificate for you using Let's Encrypt.
 
 ```
 https://dt-domain.org {
