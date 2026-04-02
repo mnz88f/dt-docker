@@ -126,7 +126,7 @@ cd certs
 
 For your clients on your LAN, you can avoid the certificate warning by installing the `dt-root-ca.crt` into your OS or browser certificate store, and configuring it for use to trust websites.
 
-If you don't do this, it may be necessary for clients to go to <your-dt-ip>:9000 to add an exception for the certificate for minio as well as wordpress (not sure).
+If you don't do this, it may be necessary for clients to go to `<your-dt-ip>:9000` to add an exception for the certificate for minio as well as wordpress (not sure).
 
 ## Install DT theme
 
