@@ -80,13 +80,13 @@ localityName_default        = <Your City>
 organizationName            = Organization Name (eg, company)
 organizationName_default    = <Your Organization>
 commonName                  = Common Name (e.g., server FQDN or YOUR name)
-commonName_default          = dt.local
+commonName_default          = <your-LAN-domain-name>
 
 [ req_ext ]
 subjectAltName = @alt_names
 
 [ alt_names ]
-DNS.1 = <your-LAN-dns if relavent>
+DNS.1 = <your-LAN-domain-name>
 IP.1  = <your-LAN-ip>
 ```
 
