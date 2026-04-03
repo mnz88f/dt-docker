@@ -1,9 +1,5 @@
 #!/bin/bash
 
-TMP_FOLDER="/tmp/$(uuidgen)"
-DT_ZIP=disciple-tools-theme.zip
-DT_URL=https://github.com/DiscipleTools/disciple-tools-theme/releases/latest/download/disciple-tools-theme.zip
-
 local deps=("wget" "unzip" "uuidgen")
 for dep in "${deps[@]}"; do
     if ! command -v "$dep" &> /dev/null; then
@@ -11,6 +7,10 @@ for dep in "${deps[@]}"; do
         exit 1
     fi
 done
+
+TMP_FOLDER="/tmp/$(uuidgen)"
+DT_ZIP=disciple-tools-theme.zip
+DT_URL=https://github.com/DiscipleTools/disciple-tools-theme/releases/latest/download/disciple-tools-theme.zip
 
 if [ ! -e "$DT_ZIP" ]; then
     wget $DT_URL $DT_ZIP
