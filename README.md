@@ -24,6 +24,8 @@ WORDPRESS_DB_NAME=production
 WORDPRESS_DEBUG=false
 ```
 
+If DT is running on a LAN using an IP address, `MINIO_PUBLIC_DOMAIN` should be set to that IP address.
+
 ### Configure Caddy
 
 Caddy is a web-server which provides a reverse proxy for docker services. The file `caddy/conf/Caddyfile` defines what services will be exposed by this docker compose service.
