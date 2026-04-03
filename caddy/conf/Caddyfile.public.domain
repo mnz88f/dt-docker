@@ -1,0 +1,7 @@
+https://dt-domain.org {
+        reverse_proxy wordpress:80
+}
+
+https://dt-domain.org:9000 {
+        reverse_proxy minio:9000
+}

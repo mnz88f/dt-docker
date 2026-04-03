@@ -6,3 +6,4 @@ vol_backup
 mysql/*/*.sql
 mysql/*/*.sql.gz
 mysql/mysql-init-archive
+caddy/conf/Caddyfile
