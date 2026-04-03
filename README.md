@@ -1,15 +1,20 @@
 # Disciple Tools Docker compose file
 
-## env file
+*What is this?* This is a docker compose file and set of scripts and tools to deploy Disciple Tools with local MinIO storage.
 
-The following variables should be defined in your docker .env file:
-```
+## How to use this
+
+### Create a `.env` file
+
+To begin, you need to create a `.env` file. Define the following variables, choosing new passwords instead of the placeholders:
+
+``` ini
 MYSQL_ROOT_PASSWORD=MySQLRootPassword
 
 MINIO_ROOT_USER=minioadmin
 MINIO_ROOT_PASSWORD=MinioPassword
 MINIO_BUCKET_NAME=dt-bucket
-MINIO_PUBLIC_DOMAIN=dt-domain.org
+MINIO_PUBLIC_DOMAIN=your-dt-domain.org
 MINIO_REGION=default
 
 WORDPRESS_DB_HOST=db
@@ -19,49 +24,19 @@ WORDPRESS_DB_NAME=production
 WORDPRESS_DEBUG=false
 ```
 
-## Setting up Caddy DT using a public domain
+### Configure Caddy
 
-If your DT host server is accessible using a public domain (ie `dt-domain.org`) then Caddy will create a certificate for you using Let's Encrypt.
+Caddy is web-server which provides a reverse proxy for docker services. The file `caddy/conf/Caddyfile` defines what services will be exposed by this docker compose service.
 
-```
-https://dt-domain.org {
-        reverse_proxy wordpress:80
-}
+If DT is going to be served on a public web domain (ie `dt-domain.org`), then rename the file `Caddyfile.public.domain` to `Caddyfile` and adjust for your domain. Caddy automates the generation of a valid ssl certificate for https, using Let's Encrypt. Once this certificate is generate, connections between minio and Wordpress should work.
 
-https://dt-domain.org:9000 {
-        reverse_proxy minio:9000
-}
-```
-
-In this case, the connections between minio and Wordpress should just work.
-
-## Running on a LAN with https
-
-If you are running DT on a LAN only using the server IP address, but still want https, then it is necessary to generate site certificates yourself and configure caddy, wordpress and minio to recognize those certificates.
-
-In this case, the Caddyfile should look like:
-```
-:443 {
-    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
-    reverse_proxy wordpress:80
-}
-
-:9000 {
-    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
-    reverse_proxy minio:9000
-}
-
-:9001 {
-    tls /etc/caddy/certs/dt.crt /etc/caddy/certs/dt.key
-    reverse_proxy minio:9001
-}
-```
-
-The caddy certificates are mounted from `caddy/conf/certs`
+If DT is going to be served on a LAN, you will need to generate your own certificate in order to still have encrypted connections using https. In this case, rename the file `Caddyfile.lan.ip` to `Caddyfile`, and use the process below to generate your own certificate.
 
 ### Creating a certificate authority and DT certificates
 
-I follow the following steps to set up the certificates. First create the site certificate request configuration file (`dt.cnf`):
+If you are serving DT on a public domain name, then your certificate is generated using Let's Encrypt, and you should skip this step.
+
+Otherwise, the following are the steps used to generate a certificate authority and signed certificate for serving on a LAN. First create the site certificate request configuration file (`dt.cnf`), replaceing `<fiels>` with your own values:
 
 ``` ini dt.cnf
 [ req ]
@@ -114,24 +89,24 @@ openssl x509 -req -in dt.csr -CA dt-root-ca.crt -CAkey dt-root-ca.key \
 openssl x509 -in dt.crt -text -noout
 ```
 
-### Copy the certificates into caddy, wordpress and minio
+Once these steps are done, place `dt-root-ca.crt` in `certs/ca/`, and `dt.crt` and `dt.key` in `certs/dt/`. Then go into the `certs` directory and run the script `./copy-certs.sh` in order to have the certificates copied into the locations needed by Caddy, Wordpress and MinIO.
 
-Place `dt-root-ca.crt` in `certs/ca/`, and `dt.crt` and `dt.key` in `certs/dt/`. Then run the script to copy the keys to the necessary folders:
-```
-cd certs
-./copy-certs.sh
-```
+In order to avoid a certificate warning in client's browsers, you can install the root certificate `dt-root-ca.crt` into the client OS and/or browser certificate store, configuring it for use for trusting websites. If you don't do this step, users will need to add a certificate exception the first time they connect to the site (and potentially also for `<your-dt-ip>:9000`).
 
-### Install CA on client machines to avoid certificate warning in the browser
+### Install DT theme
 
-For your clients on your LAN, you can avoid the certificate warning by installing the `dt-root-ca.crt` into your OS or browser certificate store, and configuring it for use to trust websites.
+To install Disciple Tools, the Disciple Tools wordpress theme needs to be downloaded and extracted within the 'wordpress' container. A script is provided to help with this.
 
-If you don't do this, it may be necessary for clients to go to `<your-dt-ip>:9000` to add an exception for the certificate for minio as well as wordpress (not sure).
+First, make sure the docker services are running. Run `docker compose up -d` in the folder with the docker compose file (`compose.yml`).
 
-## Install DT theme
+Then go into the `wordpress` folder, and run `./install_dt_theme.sh`. This should download, extract and copy the DT theme into the wordpress container.
 
-TODO Create script to install dt theme from a local zip file
+After this, DT can be updated either using the Wordpress interface, or otherwise you can remove the downloaded `wordpress/disciple-tools-theme.zip` file and run the `install_dt_theme.sh` script again.
 
-## Set up minio on first-time use
+### Set up minio on first-time use
 
-TODO, run script, open storage settings, enter storage details
+As in the previous step, ensure that the docker services are running. In addition, you need to be able to access the Wordpress admin console, which will likely involve setting up Wordpress with an admin user, and then setting up Disciple Tools.
+
+After these are complete, go into the `minio` folder and run `./first_time.sh deploy`. (This copies and runs the scirpt inside the running `MinIO` container).
+
+The script should set up `MinIO` for use, using the MinIO variables defined in the `.env` file. Once it is complete, it will print out the settings for Provider, AccessKey, Secret, Region, Bucket, Endpoint and Path-style endpoint. Navigate to the storage settings in WordPress (`wp-admin/admin.php?page=dt_options&tab=storage`) and enter the provided settings, and test the connection. Hopefully it will work!
