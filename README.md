@@ -110,3 +110,15 @@ As in the previous step, ensure that the docker services are running. In additio
 After these are complete, go into the `minio` folder and run `./first_time.sh deploy`. (This copies and runs the scirpt inside the running `MinIO` container).
 
 The script should set up `MinIO` for use, using the MinIO variables defined in the `.env` file. Once it is complete, it will print out the settings for Provider, AccessKey, Secret, Region, Bucket, Endpoint and Path-style endpoint. Navigate to the storage settings in WordPress (`wp-admin/admin.php?page=dt_options&tab=storage`) and enter the provided settings, and test the connection. Hopefully it will work!
+
+### Set up systemd service unit
+
+The docker services can be configured to start automatically using docker compose restart policy. However, as an alternative a systemd service unit can be used. Modify the `systemd-startup/dt-docker.service` service unit to have the actual path to dt-docker. Then copy the service unit to `/etc/systemd/system/dt-docker.service`, and run:
+
+``` bash
+systemctl daemon-reload
+systemctl enable dt-docker.service
+systemctl start dt-docker.service
+```
+
+This will allow the dt-docker docker compose service to be started during the operating system startup.
